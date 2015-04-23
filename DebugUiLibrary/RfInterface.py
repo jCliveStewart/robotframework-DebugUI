@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# ---------------------------------------------------------------------------------------------------
 # Copyright 2015 UCAS 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-'''
-    RfInterface.py
-    Interface to allow Debug to discover xpaths and RF variables
-'''
+#
+#    RfInterface.py
+#    Interface to allow Debug to discover xpaths and RF variables
+# ---------------------------------------------------------------------------------------------------
+
 contentLimit=30             # Limit the number of controls found for performance - else you can be hanging around forever ...
                             # This gets me around 15 seconds response on Chrome, slower but safer with Firefox 
 DEBUG=False                 # Optional verbose debugging messages
+
+# This is the list of RF default variables not to display
+from defaultVars import defaultVars
 
 from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 
 import traceback 
-# This is the list of RF default variables not to display
-from defaultVars import defaultVars
 
 spcr='   '                  # A spacer between RF command elements
 

@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# ---------------------------------------------------------------------------------------------------
 # Copyright 2015 UCAS 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-'''
-    defaultVars.py
-    A list of the default variables in robotFramework - so we can ignore them when listing variables
-'''
+#
+#    defaultVars.py
+#    A list of the default variables in robotFramework - so we can ignore them when listing variables
+# ---------------------------------------------------------------------------------------------------
+
 defaultVars=[
     '@{EMPTY}',
     '@{TEST_TAGS}',        
