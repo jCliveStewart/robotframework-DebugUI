@@ -32,6 +32,7 @@ lolWords={
             'your turn'                                         : 'UR TURN'                                          ,
             }
             
+# Translate a single message string to the alternate language            
 def language_translate(msg):                                        
     for our_words in lolWords.keys():
         if msg.find(our_words)!=-1:
@@ -39,3 +40,4 @@ def language_translate(msg):
             msg=msg.replace(our_words,katz_words)
     return msg
                 
+# ------------------------ End of file ------------------------

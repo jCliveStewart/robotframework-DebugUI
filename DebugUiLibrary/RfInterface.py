@@ -23,17 +23,13 @@ contentLimit    = 30             # Limit the number of controls found for perfor
                                  # Fastest response on Chrome, slower but safer with Firefox 
 spcr='   '                       # A spacer between RF command elements
                             
-from time import clock 
-
 # This is the list of RF default variables not to display
 from defaultVars import defaultVars
 from controlsList import controlsList
-
 from lolWords import *
 
 from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
-
 import traceback 
 from time import clock
 
@@ -49,7 +45,9 @@ class RfInterface:
         except:                
             self.driver=None
             
-    # ----------- Functions used by the debug UI -----------
+# -------------------------------------------------
+# Functions used by the debug UI 
+# -------------------------------------------------
 
     # This is a clumsy way of showing messages on the RF log    
     # Sadly they only show after the command completes
@@ -119,7 +117,7 @@ class RfInterface:
         
     # Get all controls of all types off the page and return a list of xpaths
     def getAllPageControls(self):
-        self.logMsg("Getting page controls - sorry for any delay") # ,"GETTIN PAEG CONTROLS - SRY 4 ANY DELAY")
+        self.logMsg("Getting page controls - sorry for any delay")
         
         if DEBUG: startTime=clock()
         # If testing or no browser open return an empty list
@@ -210,9 +208,8 @@ class RfInterface:
     def findSelector(self,webElement,baseXpath):
         xpath=None    
         
-        # This is expensive in terms of time 
-        #webElementText=self.get_text_excluding_children(webElement)  # 3 ms this is way faster but fragile
-        webElementText=webElement.get_attribute('textContent')        # 8 ms fastish and ok for all but IE 
+        #webElementText=self.get_text_excluding_children(webElement)  # 3  ms this is way faster but fragile
+        webElementText=webElement.get_attribute('textContent')        # 8  ms fastish and ok for all but IE 
         #webElementText=webElement.text                               # 15 ms   
 
         # Choose the properties to use to select the specific element - ID first
@@ -287,10 +284,11 @@ class RfInterface:
                     self.newWebElements.append(webElementFound)
                     
             except:
-                # Sometimes get stale element exceptions for some page dynamic content
+                # Cope with occasional stale element exceptions for dynamic page content
                 pass
                 
-# ------------------ Testing for this program ------------------      
+# ------------------ Testing for this program ------------------
+
 if __name__=='__main__':
     testVars={1:1,2:2,3:3}      # Just for testing with no selenium 
 
