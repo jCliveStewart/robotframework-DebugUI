@@ -123,7 +123,7 @@ class RfInterface:
             
         # Add all the control types listed in the controls list 
         for rfCommand, baseXpath in controlsList:                    
-            self.logMsg('    ',baseXpath)
+            if DEBUG: self.logMsg('    ',baseXpath)
             self.addControlCommands(rfCommand, baseXpath)
                         
         if DEBUG: self.logMsg("TIME TAKE",clock()-startTime)
@@ -135,11 +135,7 @@ class RfInterface:
         
         try:                                                        # Exception handling to cast iron guarantee no breakages for the debugger        
             
-            #startTime=clock()
             self.getPageControls(baseXpath)                         # This updates self.pageControls for speed 
-            #timeTaken=clock()-startTime
-            #timeTaken=round(timeTaken,2)
-            #self.logMsg("Found",baseXpath,timeTaken,'seconds')
             
             if baseXpath.find("//select")==0:                                                     
                 for xpath,webelement in self.pageControls:

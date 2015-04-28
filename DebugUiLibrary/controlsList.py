@@ -22,17 +22,18 @@
 #
 # ---------------------------------------------------------------------------------------------------
 controlsList=[
-        ('Select From List','//select'),                       # Get SELECTS        
+        ('Select From List',    '//select'),                    # Get SELECTS        
         
-        ('Select Radio Button','//input[@type="radio"]'),      # Get RADIOS                
-        ('Select checkbox','//input[@type="checkbox"]'),       # Get CHECKBOXES                
-        ('Click button','//input[@type="submit"]'),            # Get BUTTONS
+        ('Select Radio Button', '//input[@type="radio"]'),      # Get RADIOS                
+        ('Select checkbox',     '//input[@type="checkbox"]'),   # Get CHECKBOXES                
+        ('Click button',        '//input[@type="submit"]'),     # Get BUTTONS
         
         # NOTE : Get remaining //inputs last to avoid creating bogus textfield definitions
-        ('Input text','//input[@type="text"]'),                # Get TEXT INPUT FIELDS        
-        ('Click button','//input[@type="button"]'),            # Get INPUT BUTTONS
+        ('Input text',          '//input[@type="text"]'),       # Get TEXT INPUT FIELDS        
+        ('Input text',          '//input[@type="textarea"]'),   # Get TEXT INPUT FIELDS        
+        ('Click button',        '//input[@type="button"]'),     # Get INPUT BUTTONS
                 
-        ('Click link','//a'),                                  # Get LINKS
+        ('Click link',          '//a'),                         # Get LINKS
         ]
 
 print 'controlsList',controlsList        
