@@ -17,9 +17,11 @@
 #    RfInterface.py
 #    Interface to allow Debug to discover xpaths and RF variables
 # ---------------------------------------------------------------------------------------------------
-DEBUG=False                  # Optional verbose debugging messages
-contentLimit=50             # Limit the number of controls found for performance 
-                            # Fastest response on Chrome, slower but safer with Firefox 
+DEBUG           = False          # Optional verbose debugging messages
+TRANSLATED      = False          # Optional message translation
+contentLimit    = 30             # Limit the number of controls found for performance 
+                                 # Fastest response on Chrome, slower but safer with Firefox 
+spcr='   '                       # A spacer between RF command elements
                             
 from time import clock 
 
@@ -27,13 +29,13 @@ from time import clock
 from defaultVars import defaultVars
 from controlsList import controlsList
 
+from lolWords import *
+
 from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 
 import traceback 
 from time import clock
-
-spcr='   '                  # A spacer between RF command elements
 
 class RfInterface:
 
@@ -48,14 +50,23 @@ class RfInterface:
             self.driver=None
             
     # ----------- Functions used by the debug UI -----------
-            
+
     # This is a clumsy way of showing messages on the RF log    
     # Sadly they only show after the command completes
     def logMsg(self,*msgs):    
         msgs=[str(msg) for msg in msgs]
-        BuiltIn().run_keyword('log',' '.join(msgs))
+        msg=' '.join(msgs)
+        if TRANSLATED: msg=language_translate(msg)                        
+        BuiltIn().run_keyword('log',msg)
         # This is a better way but fails to print exceptions 
         #self._logger.debug(str(msgs))
+                
+    def debugMsg(self,*msgs):    
+        if DEBUG:
+            msgs=[str(msg) for msg in msgs]
+            msg=' '.join(msgs)
+            if TRANSLATED: msg=language_translate(msg)                        
+            BuiltIn().run_keyword('log',msg)
         
     # Get a list of all the currently defined variables in RobotFramework
     def getVars(self):
@@ -108,7 +119,8 @@ class RfInterface:
         
     # Get all controls of all types off the page and return a list of xpaths
     def getAllPageControls(self):
-        self.logMsg("Getting page controls - sorry for any delays")
+        self.logMsg("Getting page controls - sorry for any delay") # ,"GETTIN PAEG CONTROLS - SRY 4 ANY DELAY")
+        
         if DEBUG: startTime=clock()
         # If testing or no browser open return an empty list
         if self.driver==None:
@@ -123,10 +135,10 @@ class RfInterface:
             
         # Add all the control types listed in the controls list 
         for rfCommand, baseXpath in controlsList:                    
-            if DEBUG: self.logMsg('    ',baseXpath)
+            self.debugMsg('  ',baseXpath)
             self.addControlCommands(rfCommand, baseXpath)
                         
-        if DEBUG: self.logMsg("TIME TAKE",clock()-startTime)
+        if DEBUG: self.debugMsg("TIME TAKE",clock()-startTime)
         self.logMsg("OK got the controls - your turn")
         return self.allControlStrings
 
@@ -241,7 +253,7 @@ class RfInterface:
                                     
         # After that we're jiggered    
         else:
-            if DEBUG: self.logMsg( "Failed to find an identifier for xpath",baseXpath,webElementText )
+            self.debugMsg( "Failed to find an identifier for xpath",baseXpath,webElementText )
             xpath=None
             
         return xpath
