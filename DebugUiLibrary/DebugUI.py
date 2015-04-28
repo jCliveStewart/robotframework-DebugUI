@@ -62,6 +62,10 @@ When you open the 'Saved' page the list of saved commands is put on the clipboar
 
 You can use the debugger alongside checkXpath and firebug. It has been tested with firefox and Chrome. 
 Check the robotFramework log in RIDE to see the current status. 
+You will get far faster response time if you use Chrome ... 
+
+If you want to add controls to search for edit controlsList.py
+Good luck !!!
 '''
 class DebugUI:
 

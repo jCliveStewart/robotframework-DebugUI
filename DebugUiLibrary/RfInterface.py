@@ -17,18 +17,21 @@
 #    RfInterface.py
 #    Interface to allow Debug to discover xpaths and RF variables
 # ---------------------------------------------------------------------------------------------------
-
-contentLimit=30             # Limit the number of controls found for performance - else you can be hanging around forever ...
-                            # This gets me around 15 seconds response on Chrome, slower but safer with Firefox 
-DEBUG=False                 # Optional verbose debugging messages
+DEBUG=False                  # Optional verbose debugging messages
+contentLimit=50             # Limit the number of controls found for performance 
+                            # Fastest response on Chrome, slower but safer with Firefox 
+                            
+from time import clock 
 
 # This is the list of RF default variables not to display
 from defaultVars import defaultVars
+from controlsList import controlsList
 
 from robot.libraries.BuiltIn import BuiltIn
 from robot.api import logger
 
 import traceback 
+from time import clock
 
 spcr='   '                  # A spacer between RF command elements
 
@@ -46,6 +49,14 @@ class RfInterface:
             
     # ----------- Functions used by the debug UI -----------
             
+    # This is a clumsy way of showing messages on the RF log    
+    # Sadly they only show after the command completes
+    def logMsg(self,*msgs):    
+        msgs=[str(msg) for msg in msgs]
+        BuiltIn().run_keyword('log',' '.join(msgs))
+        # This is a better way but fails to print exceptions 
+        #self._logger.debug(str(msgs))
+        
     # Get a list of all the currently defined variables in RobotFramework
     def getVars(self):
 
@@ -74,7 +85,6 @@ class RfInterface:
                 self.logMsg('Running command: '+argsString)    # Log in the RF message log
             except:
                 self.logMsg('ERROR ENCODING COMMAND - PROBABLY a UNICODE ERROR')
-
             
         # If the first thing is a variable name remove it so we can call the RF command
         # Bad luck if there are several commands 
@@ -92,139 +102,112 @@ class RfInterface:
             self.logMsg(' ---- Drat - that didn\'t work ---- ')
             
         
+# -------------------------------------------------
+# Functions for getting page contents 
+# -------------------------------------------------
+        
     # Get all controls of all types off the page and return a list of xpaths
     def getAllPageControls(self):
-        
+        self.logMsg("Getting page controls - sorry for any delays")
+        if DEBUG: startTime=clock()
         # If testing or no browser open return an empty list
         if self.driver==None:
             self.logMsg( "No build context - ignored getAllPageControls" )
             return ['DOH !! You need the browser open to use the debugger !!']
                    
-        self.xpathsFound=[]         # Keep a global list of xpaths so we can find inputs which as checkboxes and buttons and later ignore them when we look for links
-        allControlStrings=[]
+        self.allControlStrings=[]                               # Keep a global list of controls so we can check for duplicates
         
-        # Get Page Title
+        # Add Page Title should be command
         titleString="Title should be"+spcr+self.driver.title                        
-        allControlStrings.append(titleString)
-             
-        # NOTE : Get the //inputs in this order to avoid getting bogus textfields
-        
-        # Get CHECKBOXES
-        xpathCommands=self.getControlCommands('//input[@type="checkbox"]',"Select checkbox")
-        allControlStrings=allControlStrings+xpathCommands
-        
-        # Get BUTTONS
-        xpathCommands=self.getControlCommands('//input[@type="submit"]',"Click button")
-        allControlStrings=allControlStrings+xpathCommands
-        
-        # Get RADIOS - this lists all radio options it finds - RF wants : Select Radio Button   name   value
-        linkXpaths=self.__Get_Page_Controls__('//input[@type="radio"]')
-        for linkXpath in linkXpaths:        
-            # In case __Get_Page_Controls__ returns None
-            if linkXpath.__class__.__name__!='WebElement':
-                if DEBUG: self.logMsg("ERROR for RADIO linkXpath",linkXpath)
-            else:    
-                radioSelection=self.__get_webElement__(linkXpath)
-                #if radioSelection==None:             # Seen an error where __get_webElement__ returns None 
-                #    self.logMsg("ERROR for select linkXpath",linkXpath)
-                #else:
-                radioName=radioSelection.get_attribute("name")
-                radioValue=radioSelection.get_attribute("value")
-                linkString="Select Radio Button"+spcr+radioName+spcr+radioValue
-                if not linkString in allControlStrings:
-                    allControlStrings.append(linkString)
-
-        # Get INPUT FIELDS
-        xpathCommands=self.getControlCommands('//input',"Input text")
-        # Add a dummy variable for the user to replace
-        xpathCommands=[c+spcr+'${"VALUE"}' for c in xpathCommands]            
-        allControlStrings=allControlStrings+xpathCommands
-        
-        # Get LINKS
-        xpathCommands=self.getControlCommands('//a',"Click link")
-        allControlStrings=allControlStrings+xpathCommands
+        self.allControlStrings.append(titleString)
+            
+        # Add all the control types listed in the controls list 
+        for rfCommand, baseXpath in controlsList:                    
+            self.logMsg('    ',baseXpath)
+            self.addControlCommands(rfCommand, baseXpath)
                         
-        # Get SELECTS
-        linkXpaths=self.__Get_Page_Controls__('//select')                                     
-        for linkXpath in linkXpaths:                
-            selectControl=self.__get_webElement__(linkXpath)                
-            # For condition where __get_webElement__ returns None - cannot compare WebElement with None
-            if selectControl.__class__.__name__!='WebElement':
-                if DEBUG: self.logMsg("ERROR for select xpath",linkXpath)
-            else:
-                # Find the available selections 
-                selections=selectControl.find_elements_by_tag_name("option")
-                # Take the first selection if there is one 
-                if len(selections)==0:
-                    self.logMsg( 'ERROR - a select with no selections - surely this is not possible' )
-                elif len(selections)==1:
-                    selection=selections[0]
-                else:    
-                    selection=selections[1]                    
-                    linkString="Select From List"+spcr+linkXpath+spcr+selection.text   # +"SELECTION"
-                    if not linkString in allControlStrings:
-                        allControlStrings.append(linkString)
-                        
-        return allControlStrings
+        if DEBUG: self.logMsg("TIME TAKE",clock()-startTime)
+        self.logMsg("OK got the controls - your turn")
+        return self.allControlStrings
 
     # Given a generic xpath  find page controls and return a list of RF commands
-    def getControlCommands(self,xpath,RfCommand):
-        controlStrings=[]
-        try: 
-            xpaths=self.__Get_Page_Controls__(xpath)
-            for xpath in xpaths:
-                linkString=RfCommand+spcr+xpath
-                if xpath in self.xpathsFound:
-                    pass
-                elif linkString in controlStrings:
-                    pass
-                else:    
-                    controlStrings.append(linkString)                        
+    def addControlCommands(self,RfCommand,baseXpath):
+        
+        try:                                                        # Exception handling to cast iron guarantee no breakages for the debugger        
+            
+            #startTime=clock()
+            self.getPageControls(baseXpath)                         # This updates self.pageControls for speed 
+            #timeTaken=clock()-startTime
+            #timeTaken=round(timeTaken,2)
+            #self.logMsg("Found",baseXpath,timeTaken,'seconds')
+            
+            if baseXpath.find("//select")==0:                                                     
+                for xpath,webelement in self.pageControls:
+                    options=webelement.find_elements_by_tag_name("option")          # Get SELECT OPTIONS                                        
+                    # Take the first selection if there is one 
+                    if len(options)==0:
+                        self.logMsg( 'ERROR - a select with no options - surely this is not possible' )
+                    elif len(options)==1:
+                        selection=options[0]
+                    else:    
+                        selection=options[1]                    
+                    linkString="Select From List"+spcr+xpath+spcr+selection.text   # +"SELECTION"
+                    
+                    if not linkString in self.allControlStrings:        # Avoid adding the same control to this list twice 
+                        self.allControlStrings.append(linkString)                        
+                                        
+            elif baseXpath.find('//input')==0:                    
+                for xpath,webelement in self.pageControls:
+                    # Note checking the baseXpath here rather than the webelement for speed and safety 
+                    # Checking for webElement type is slow and can get exceptions 
+                    
+                    # Get RADIO VALUES - this lists all radio options it finds - RF wants : Select Radio Button   name   value
+                    if baseXpath.find('@type="radio"')!=-1:                    
+                        radioName=webelement.get_attribute("name")
+                        radioValue=webelement.get_attribute("value")
+                        linkString="Select Radio Button"+spcr+radioName+spcr+radioValue            
+                        
+                    # Add values to the command for controls like selects, checkboxes, entryfields 
+                    elif baseXpath.find('@type="text"')!=-1:                    
+                        linkString=RfCommand+spcr+xpath+spcr+'YOUR-VALUE'         
+                        
+                    else:
+                        linkString=RfCommand+spcr+xpath
+                    
+                    if not linkString in self.allControlStrings:        # Avoid adding the same control to this list twice 
+                        self.allControlStrings.append(linkString)                        
+                        
+            else:
+                for xpath,webelement in self.pageControls:
+                    linkString=RfCommand+spcr+xpath                        
+                    if not linkString in self.allControlStrings:        # Avoid adding the same control to this list twice 
+                        self.allControlStrings.append(linkString)                        
+                
         except:
-            self.logMsg( "Something broke while getting page contents for",xpath)
+            self.logMsg( "Something broke while getting page contents for",baseXpath)
             msgs=traceback.format_exc().split('\n')
             for msg in msgs:
                 self.logMsg( "Exception message:",msg )
-    
-        return controlStrings
-        
-    # ----------- End of functions used by the debug UI -----------
-                
-    def __Get_Page_Controls__(self,baseXpath):
-        """Get a list of valid elements of a particular type from a page. You can use names like LINKS, INPUTS, SELECTS or xpath expressions"""    
-        
-        pageControls=[]    
-        webElements=self.driver.find_elements_by_xpath(baseXpath)
-        
-        for webElement in webElements[:contentLimit]:
-
-            # Ignore invisible items
-            if not webElement.is_displayed():
-                pass
-            # Ignore disabled items
-            elif not webElement.is_enabled():
-                pass
-            # Ignore empty links - no text, name, ID 
-            elif baseXpath=="//a" and webElement.text=="":
-                if DEBUG: self.logMsg( "Ignoring empty link" )
-                pass
-            # Ignore buttons and radios when we are searching for inputs 
-            # find them separately when we search for specific types of inputs
-            elif baseXpath=="//input" and webElement.get_attribute("type") in ["submit","button","radio","checkbox"]:
-                pass               
-            else:    
-                xpath = self.__findSelector__(webElement,baseXpath)
-                if xpath != None:
-                    pageControls.append(xpath)
-                            
-        return pageControls
-                                
+            
+    # this takes around 3 ms as opposed to up to 15 for get_attribute etc 
+    # Sadly it breaks for some pages ... 
+    def get_text_excluding_children(self, element):
+        return self.driver.execute_script("""
+        return jQuery(arguments[0]).contents().filter(function() {
+            return this.nodeType == Node.TEXT_NODE;
+        }).text();
+        """, element)            
+            
     # Find an xpath selector for an element
-    def __findSelector__(self,webElement,baseXpath):
-        
+    def findSelector(self,webElement,baseXpath):
         xpath=None    
         
-        # Choose the attributes to use to select the specific element - ID first
+        # This is expensive in terms of time 
+        #webElementText=self.get_text_excluding_children(webElement)  # 3 ms this is way faster but fragile
+        webElementText=webElement.get_attribute('textContent')        # 8 ms fastish and ok for all but IE 
+        #webElementText=webElement.text                               # 15 ms   
+
+        # Choose the properties to use to select the specific element - ID first
         if webElement.get_attribute("id") not in ['',None]:
             xpath=webElement.get_attribute("id")
             
@@ -232,81 +215,73 @@ class RfInterface:
         elif webElement.get_attribute("name") not in ['',None]:
             name=webElement.get_attribute("name")    
             xpath=baseXpath+'[@name="'+name+'"]'
-            xpath=xpath.replace('][',' and ')
+            xpath=xpath.replace('][',' and ')                   # If the incoming xpath specified properties add 'and' between them     
+
+        # Selects tend to be defined by class name            
+        elif baseXpath in ['//select']:
+            elementClass=webElement.get_attribute("class")    
+            if elementClass not in ['',None]:
+                xpath=baseXpath+'[@class="'+elementClass+'"]'
+                xpath=xpath.replace('][',' and ')                   # If the incoming xpath specified properties add 'and' between them     
+            else:    
+                xpath=None
             
         # Then text    
-        elif webElement.text!='':
-        
+        elif webElementText!='':            
             # Deal with strings that split across lines        
-            pos=webElement.text.find("\n")
-            if pos!=-1:
-                webElementText=webElement.text[:pos].strip()
-                xpath=baseXpath+'[starts-with(text(),"'+webElementText+'")]'                
+            pos=webElementText.find("\n")
+            if pos>1:
+                xpath=baseXpath+'[starts-with(text(),"'+webElementText[:pos].strip()+'")]'                
+                xpath=xpath.replace('][',' and ')           # If the incoming xpath specified properties add 'and' between them     
             # Normal strings with no splitting     
             else:
-                webElementText=webElement.text                    
-                xpath=baseXpath+'[text()="'+webElementText+'"]'                
-            xpath=xpath.replace('][',' and ')
+                xpath=baseXpath+'[text()="'+webElementText+'"]'                                
+                xpath=xpath.replace('][',' and ')           # If the incoming xpath specified properties add 'and' between them     
             
         # For Next >> buttons - id and value 
         elif webElement.get_attribute("type")=='submit':
             value=webElement.get_attribute("value")
             xpath='//input[@type="submit" and @value="'+value+'"]'
-            
-        # For checkboxes - use id or name     
-        elif webElement.get_attribute("type")=='checkbox':
-            id=webElement.get_attribute("id")
-            name=webElement.get_attribute("name")
-            if id!='':
-                xpath=id
-            elif name!='':
-                xpath='//input[@name="'+name+'"]'
-            else:
-                if DEBUG: self.logMsg( "PROBLEM finding an identifier for checkbox",xpath,webElement.text )
-                xpath=None
                                     
         # After that we're jiggered    
         else:
-            if DEBUG: self.logMsg( "PROBLEM finding an identifier for xpath",baseXpath,webElement.text )
+            if DEBUG: self.logMsg( "Failed to find an identifier for xpath",baseXpath,webElementText )
             xpath=None
-        
+            
         return xpath
-            
-    # Get a list of matching web elements using an xpath or css expression. CARE these are volatile if the page is dynamic
-    def __get_webElements__(self,linkXpath):
-            
-        if linkXpath.find('//')==0:                                     # If using an Xpath expression
-            webElements=self.driver.find_elements_by_xpath(linkXpath)            
-        else:                                                           # else we are using a CSS expression    
-            webElements=self.driver.find_elements_by_id(linkXpath)        
-            
-        if len(webElements)==0:
-            if DEBUG: self.logMsg( '__get_webElements__ - ELEMENT NOT FOUND',linkXpath )
-            
-        return webElements    
+                                   
+    # Get a list of xpath selectors for a particular type from the page
+    def getPageControls(self,baseXpath):
+    
+        self.pageControls=[]    
+        self.getWebElements(baseXpath)                                  # This updates newWebElements for speed 
 
-    # Get a single webElement using an xpath expression return either the element or None
-    def __get_webElement__(self,linkXpath):
-        webElements=self.__get_webElements__(linkXpath)
-        if len(webElements)>1:
-            if DEBUG: 
-                self.logMsg('__get_webElement__ - MULTIPLE ELEMENTS FOUND',linkXpath)
-                self.logMsg('returning the first element')
-            webElement=webElements[0]
-        elif len(webElements)==1:
-            webElement=webElements[0]
-        else:    
-            webElement=None
-        return webElement
+        for webElement in self.newWebElements[:contentLimit]:
+            xpath = self.findSelector(webElement,baseXpath)
+            if xpath != None:
+                self.pageControls.append((xpath,webElement))            # Pass back the webelement so we can get select options etc 
+                                
+    # Get a list of matching web elements using an xpath or css expression. CARE these are volatile if the page is dynamic
+    def getWebElements(self,xpath):            
+    
+        self.newWebElements=[]
+        webElementsFound=self.driver.find_elements_by_xpath(xpath)                    
         
-    # This is a clumsy way of showing messages on the RF log    
-    # Sadly they only show after the command completes
-    def logMsg(self,*msgs):    
-        msgs=[str(msg) for msg in msgs]
-        BuiltIn().run_keyword('log',' '.join(msgs))
-        # This is a better way but fails to print exceptions 
-        #self._logger.debug(str(msgs))
-        
+        for webElementFound in webElementsFound:            
+            try: 
+                if not webElementFound.is_enabled():                      # Ignore disabled items
+                    pass            
+                elif not webElementFound.is_displayed():                    # Ignore invisible items
+                    pass            
+                elif xpath=="//a" and webElementFound.text=="":             # Ignore empty links with no text, name, ID 
+                    pass                
+                else:
+                    self.newWebElements.append(webElementFound)
+                    
+            except:
+                # Sometimes get stale element exceptions for some page dynamic content
+                pass
+                
 # ------------------ Testing for this program ------------------      
 if __name__=='__main__':
     testVars={1:1,2:2,3:3}      # Just for testing with no selenium 
