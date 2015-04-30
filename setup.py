@@ -23,36 +23,25 @@ def read(*paths):
     with open(os.path.join(*paths), 'r') as f:
         return f.read()
 
-if 0:         
-    packages=find_packages()
-    print 'packages',packages
-    import sys        
-    sys.exit()
-        
 setup(
-    name='robotFramework_DebugUiLibrary',
+    name='robotFramework-DebugUiLibrary',
     version='0.9.0',
     description='Debug robotFramework scripts simply',
     
-    long_description=(  read('readme.rst') 
+    long_description=(read('readme.rst') 
                         + '\n\n' + read('history.rst') 
-                        + '\n\n' + read('authors.rst')
                         ),
+    #                   + '\n\n' + read('authors.rst')
+    #                   ),
                       
-    url='http://jclivestewart.github.io/robotframework-DebugUI/',
+    url='http://github.com/UCAS/RF_DebugUI',
     license='Apache 2.0',
-    author='James Clive Stewart',
+    author='J C Stewart',
     author_email='jCliveStewart@users.noreply.github.com',
     
-    py_modules=['robotFramework_DebugUiLibrary'],
-        
-    #package_dir = {'':'src'}, 
-    packages=find_packages(exclude=["*.bat","*.pyc","test.py"]),    
+    packages=['DebugUiLibrary'],
     
-    install_requires=[],
-    
-    # Not needed - this is for data as part of the packages
-    # include_package_data=True,
+    include_package_data=True,
     
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

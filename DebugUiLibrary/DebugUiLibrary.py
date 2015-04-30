@@ -17,8 +17,7 @@
 #    DebugUiLibrary.py
 #    The main debug program - we can't call it DebugLibrary because there is already one of that name
 # ---------------------------------------------------------------------------------------------------
-
-from RfInterface import RfInterface  # This allows acccess to robotFramewrok calls and data
+from RfInterface import RfInterface  # This allows acccess to robotFramework calls and data
 from DebugUI import DebugUI          # This is the pop up UI
 
 # This is the main library function used in robotFramework scripts        
