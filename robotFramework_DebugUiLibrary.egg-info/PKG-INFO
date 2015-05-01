@@ -1,8 +1,8 @@
 Metadata-Version: 1.1
 Name: robotFramework-DebugUiLibrary
 Version: 0.9.0
-Summary: Debug robotFramework scripts quickly and easily
-Home-page: https://github.com/jCliveStewart/robotframework-DebugUI
+Summary: Debug robotFramework scripts simply
+Home-page: http://github.com/UCAS/RF_DebugUI
 Author: J C Stewart
 Author-email: jCliveStewart@users.noreply.github.com
 License: Apache 2.0
@@ -71,7 +71,7 @@ Platform: UNKNOWN
 Classifier: Development Status :: 2 - Pre-Alpha
 Classifier: Intended Audience :: Developers
 Classifier: Natural Language :: English
-Classifier: License :: Apache 2.0
+Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 2.7

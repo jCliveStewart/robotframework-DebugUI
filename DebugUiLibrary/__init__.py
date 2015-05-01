@@ -14,13 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ---------------------------------------------------------------------------------------------------
-#from DebugUiLibrary import controlsList
-#from DebugUiLibrary import DebugUi
 from DebugUiLibrary import DebugUiLibrary
-#from DebugUiLibrary import defaultVars
-#from DebugUiLibrary import lolWords
-#from DebugUiLibrary import lolWords
-#from DebugUiLibrary import RfInterface
 
 from version import VERSION
 

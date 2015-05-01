@@ -1,5 +1,11 @@
 [distutils]
-index-servers=pypi
+index-servers=
+    pypi
+    test
+
+[test]
+repository=https://testpypi.python.org/pypi
+username=jCliveStewart
 
 [pypi]
 repository = https://pypi.python.org/pypi
