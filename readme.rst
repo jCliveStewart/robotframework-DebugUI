@@ -1,6 +1,7 @@
 README.rst
 
 Robot Framework Debug User Interface
+
 Introduction
 Installation
 Example
@@ -29,6 +30,7 @@ After that you can install the library with python setup.py install
 
 
 Usage Example
+
 Below is a simple example of using the debug UI. You can paste it directly into the RIDE text edit page to try it.
 
 *** Settings ***
@@ -44,6 +46,7 @@ Simple Test
     
     
 Usage Instructions
+
 Add the command 'Debug' at the line before you want to start debugging. 
 The Debug UI panel surfaces when robotframework executes the "Debug" command. 
 The UI will find xpaths for controls on the page and offer simple commands that may be useful. 
@@ -58,5 +61,6 @@ Click the exit button.
 The script will continue from the line after the 'Debug' command. 
 
 License
+
 Robot Framework DebugUI is open source software provided under under Apache License 2.0. 
 Robot Framework DebugUI documentation and other similar content use Creative Commons Attribution 3.0 Unported license. 
