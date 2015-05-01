@@ -1,6 +1,6 @@
 @echo off 
 
-goto TEST_ONLY
+rem goto TEST_ONLY
 
 echo cleaning up ...
 del dist\*.*  /Q 
@@ -10,11 +10,15 @@ rmdir robotFramework_DebugUiLibrary.egg-info /s /q
 echo Should have removed the files 
 rem pause 
 
-rem pip distribution
-python setup.py sdist
-
-rem windows distribution
+rem windows distribution - nah ...
 rem python setup.py bdist_wininst
+
+rem pip distribution
+rem python setup.py sdist
+
+rem preferred python wheel distribution which is working in Pypi 
+python setup.py bdist_wheel
+goto EXIT
 
 echo Packaged up
 rem pause
