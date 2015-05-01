@@ -1,6 +1,6 @@
 @echo off 
 
-rem goto TEST_ONLY
+goto TEST_ONLY
 
 echo cleaning up ...
 del dist\*.*  /Q 
