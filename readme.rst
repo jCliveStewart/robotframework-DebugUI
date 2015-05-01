@@ -17,8 +17,12 @@ Latest version Number 0.9.0
 
 Installation
 
-If you already have Python with pip installed, you can simply install from the command line:
+If you already have Python with pip installed, you can simply install from the command line using:
+
 pip install robotFramework-DebugUILibrary
+
+You may need to make sure you have connectivity to https://pypi.python.org to do this.
+
 
 Alternatively you can get robotFramework-DebugUILibrary source code by downloading the source distribution from GitHub. 
 After that you can install the library with python setup.py install
